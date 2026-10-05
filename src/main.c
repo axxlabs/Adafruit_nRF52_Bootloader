@@ -211,6 +211,15 @@ int main(void) {
        bootloader_app_is_valid() && 
       !bootloader_dfu_sd_in_progress()) {
     PRINTF("App is valid\r\n");
+
+    // After a BLE OTA session (completed, aborted or timed out), do a clean reset instead of
+    // jumping to the app directly: the SoftDevice was running and the app may hang on the
+    // leftover state. GPREGRET is already cleared, so the next boot starts the app normally.
+    if (_ota_dfu) {
+      PRINTF("OTA done, resetting\r\n");
+      NVIC_SystemReset();
+    }
+
     if (is_sd_existed()) {
       // MBR forward IRQ to SD (if not already)
       if (!_sd_inited) mbr_init_sd();

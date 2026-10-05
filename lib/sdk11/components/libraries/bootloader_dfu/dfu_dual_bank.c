@@ -717,7 +717,10 @@ void dfu_reset(void)
     //  application. Make sure to reboot into DFU mode instead of starting 
     //  a previously stored application (specially valid for double bank 
     //  bootloaders
-    update_status.restart_into_bootloader = (m_dfu_state == DFU_STATE_RX_DATA_PKT && m_data_received != m_image_size);
+    // App/bootloader updates are received into bank 1, so bank 0 still holds the previous
+    //  application and it is safe to return to it. Only a SoftDevice update erases bank 0.
+    update_status.restart_into_bootloader = (m_dfu_state == DFU_STATE_RX_DATA_PKT && m_data_received != m_image_size &&
+                                             IS_UPDATING_SD(m_start_packet));
 
     bootloader_dfu_update_process(update_status);
 }
